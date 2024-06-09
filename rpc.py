@@ -1,17 +1,8 @@
-import json as stdjson
-
-
-try:
-    import orjson as json
-    _USE_ORJSON = True
-except ImportError:
-    json = stdjson
-    _USE_ORJSON = False
-
 import asyncio
+import json
 import signal
 import sys
-from typing import TYPE_CHECKING, Any, Awaitable, Callable
+from typing import TYPE_CHECKING
 
 import cfg
 from pika_interface import listen_to
@@ -50,23 +41,13 @@ class RpcContent(dict):
         self[attr] = value
 
 
-# async def rpc_call(target_host: str, target_method: str, args: list[str]):
-#     rpc_body = {
-#         'method': target_method,
-#         'args': args
-#     }
-#     content: str | bytes = json.dumps(rpc_body)
-#     print(f"rpc.{target_host}.{target_method}")
-#     await send_message(f"rpc.{target_host}.{target_method}", content)
-
-
 async def rpc_handler(target_method: str, args: list[str]):
     if target_method == 'hello':
         print("hello, world!")
 
 
 async def pika_rpc_handler_client(message: "AbstractIncomingMessage"):
-    obj: RpcContent = stdjson.loads(message.body, object_hook=RpcContent)
+    obj: RpcContent = json.loads(message.body, object_hook=RpcContent)
     await rpc_handler(obj.method, obj.args)
 
 
@@ -79,18 +60,15 @@ def _exit_func(*args):
     sys.exit(0)
 
 
-def main(handler: Callable[["AbstractIncomingMessage"], Awaitable[Any]]):
+def main():
     signal.signal(signal.SIGINT, _exit_func)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     global canceller
     # loop.run_until_complete(create_sustained_connection(**connection_kw))
-    canceller = listen_to(loop, f"rpc.{cfg.CLIENT_NAME}", handler, **connection_kw)
+    canceller = listen_to(loop, f"rpc.{cfg.CLIENT_NAME}", pika_rpc_handler_client, **connection_kw)
     loop.run_forever()
 
 
 if __name__ == "__main__":
-    if cfg.SERVER:
-        main(pika_rpc_handler_server)
-    else:
-        main(pika_rpc_handler_client)
+    main()
