@@ -1,16 +1,17 @@
+import json as stdjson
+
+
 try:
     import orjson as json
     _USE_ORJSON = True
 except ImportError:
     json = stdjson
     _USE_ORJSON = False
+
 import asyncio
-import json as stdjson
 import signal
 import sys
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, cast
-
-from aio_pika import connect_robust
 
 import cfg
 from pika_interface import create_sustained_connection, listen_to, send_message
