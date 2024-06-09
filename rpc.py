@@ -11,10 +11,10 @@ except ImportError:
 import asyncio
 import signal
 import sys
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, cast
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 import cfg
-from pika_interface import create_sustained_connection, listen_to, send_message
+from pika_interface import listen_to
 
 
 if TYPE_CHECKING:
@@ -50,14 +50,14 @@ class RpcContent(dict):
         self[attr] = value
 
 
-async def rpc_call(target_host: str, target_method: str, args: list[str]):
-    rpc_body = {
-        'method': target_method,
-        'args': args
-    }
-    content: str | bytes = json.dumps(rpc_body)
-    print(f"rpc.{target_host}.{target_method}")
-    await send_message(f"rpc.{target_host}.{target_method}", content)
+# async def rpc_call(target_host: str, target_method: str, args: list[str]):
+#     rpc_body = {
+#         'method': target_method,
+#         'args': args
+#     }
+#     content: str | bytes = json.dumps(rpc_body)
+#     print(f"rpc.{target_host}.{target_method}")
+#     await send_message(f"rpc.{target_host}.{target_method}", content)
 
 
 async def rpc_handler(target_method: str, args: list[str]):
@@ -79,19 +79,13 @@ def _exit_func(*args):
     sys.exit(0)
 
 
-async def test():
-    await asyncio.sleep(1)
-    await rpc_call(cfg.CLIENT_NAME, 'hello', [])
-
-
 def main(handler: Callable[["AbstractIncomingMessage"], Awaitable[Any]]):
     signal.signal(signal.SIGINT, _exit_func)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     global canceller
-    loop.run_until_complete(create_sustained_connection(**connection_kw))
+    # loop.run_until_complete(create_sustained_connection(**connection_kw))
     canceller = listen_to(loop, f"rpc.{cfg.CLIENT_NAME}", handler, **connection_kw)
-    loop.run_until_complete(test())
     loop.run_forever()
 
 
