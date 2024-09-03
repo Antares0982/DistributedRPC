@@ -2,6 +2,7 @@
 .vscode/
 pika_interface.py
 cfg.py
+.envrc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
