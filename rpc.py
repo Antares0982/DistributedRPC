@@ -68,7 +68,7 @@ class RpcHandleManager:
 
     async def cancel(self):
         if self.canceller:
-            await self.canceller
+            await self.canceller()
             self.canceller = None
 
     @staticmethod
