@@ -1,0 +1,7 @@
+[tool.ruff]
+line-length = 160
+
+[tool.ruff.format]
+
+[tool.pylint]
+disable = "R,C,W0613"

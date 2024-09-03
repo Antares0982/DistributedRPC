@@ -1,6 +1,6 @@
 pkgs: pypkgs: with pypkgs;
 [
   aio-pika
-  orjson
+  msgpack
   # add packages here
 ]
